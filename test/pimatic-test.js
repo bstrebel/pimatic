@@ -1,94 +1,111 @@
-assert = require "cassert"
+/*
+ * decaffeinate suggestions:
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+const assert = require("cassert");
 
-describe "pimatic", ->
+describe("pimatic", function() {
 
-  config =   
-    settings:
-      locale: "en"
-      authentication:
-        username: "test"
-        password: "test"
-        enabled: true
+  const config = {   
+    settings: {
+      locale: "en",
+      authentication: {
+        username: "test",
+        password: "test",
+        enabled: true,
         disabled: true
-      logLevel: "error"
-      httpServer:
-        enabled: true
+      },
+      logLevel: "error",
+      httpServer: {
+        enabled: true,
         port: 8080
-      httpsServer:
+      },
+      httpsServer: {
         enabled: false
-      database:
-        client: "sqlite3"
+      },
+      database: {
+        client: "sqlite3",
         connection: {
           filename: ':memory:'
         }
-      plugins: []
-      devices: []
+      },
+      plugins: [],
+      devices: [],
       rules: []
+    }
+  };
 
-  fs = require 'fs'
-  os = require 'os'
-  configFile = "#{os.tmpdir()}/pimatic-test-config.json"
+  const fs = require('fs');
+  const os = require('os');
+  const configFile = `${os.tmpdir()}/pimatic-test-config.json`;
 
-  before ->
-    fs.writeFileSync configFile, JSON.stringify(config)
-    process.env.PIMATIC_CONFIG = configFile
+  before(function() {
+    fs.writeFileSync(configFile, JSON.stringify(config));
+    return process.env.PIMATIC_CONFIG = configFile;
+  });
 
-  after ->
-    fs.unlinkSync configFile
+  after(() => fs.unlinkSync(configFile));
 
-  framework = null
-  deviceConfig = null
+  let framework = null;
+  let deviceConfig = null;
 
-  describe 'startup', ->
+  describe('startup', function() {
 
-    it "should startup", (finish) ->
-      startup = require('../startup')
-      startup.startup().then( (fm)->
-        framework = fm
-        finish()
-      ).catch(finish)
-      return
+    it("should startup", function(finish) {
+      const startup = require('../startup');
+      startup.startup().then( function(fm){
+        framework = fm;
+        return finish();
+      }).catch(finish);
+    });
 
-    it "httpServer should run", (done)->
-      http = require 'http'
-      http.get("http://localhost:#{config.settings.httpServer.port}", (res) ->
-        done()
-      ).on "error", (e) ->
-        throw e
-      return
+    it("httpServer should run", function(done){
+      const http = require('http');
+      http.get(`http://localhost:${config.settings.httpServer.port}`, res => done()).on("error", function(e) {
+        throw e;
+      });
+    });
 
-    it "httpServer should ask for password", (done)->
-      http = require 'http'
-      http.get("http://localhost:#{config.settings.httpServer.port}", (res) ->
-        assert res.statusCode is 401 # is Unauthorized
-        done()
-      ).on "error", (e) ->
-        throw e
-      return
+    return it("httpServer should ask for password", function(done){
+      const http = require('http');
+      http.get(`http://localhost:${config.settings.httpServer.port}`, function(res) {
+        assert(res.statusCode === 401); // is Unauthorized
+        return done();
+      }).on("error", function(e) {
+        throw e;
+      });
+    });
+  });
 
-  describe '#addDeviceToConfig()', ->
+  describe('#addDeviceToConfig()', function() {
 
-    deviceConfig = 
-      id: 'test-actuator'
+    deviceConfig = { 
+      id: 'test-actuator',
       class: 'TestActuatorClass'
+    };
 
-    it 'should add the actuator to the config', ->
+    it('should add the actuator to the config', function() {
 
-      framework.deviceManager.addDeviceToConfig deviceConfig
-      assert framework.config.devices.length is 1
-      assert framework.config.devices[0].id is deviceConfig.id
+      framework.deviceManager.addDeviceToConfig(deviceConfig);
+      assert(framework.config.devices.length === 1);
+      return assert(framework.config.devices[0].id === deviceConfig.id);
+    });
 
-    it 'should throw an error if the actuator exists', ->
-      try
-        framework.deviceManager.addDeviceToConfig deviceConfig
-        assert false
-      catch e
-        assert e.message is "An device with the ID #{deviceConfig.id} is already in the config"
+    return it('should throw an error if the actuator exists', function() {
+      try {
+        framework.deviceManager.addDeviceToConfig(deviceConfig);
+        return assert(false);
+      } catch (e) {
+        return assert(e.message === `An device with the ID ${deviceConfig.id} is already in the config`);
+      }
+    });
+  });
 
-  describe '#isDeviceInConfig()', ->
+  return describe('#isDeviceInConfig()', function() {
 
-    it 'should find actuator in config', ->
-      assert framework.deviceManager.isDeviceInConfig deviceConfig.id
+    it('should find actuator in config', () => assert(framework.deviceManager.isDeviceInConfig(deviceConfig.id)));
 
-    it 'should not find another actuator in config', ->
-      assert not framework.deviceManager.isDeviceInConfig 'a-not-present-id'
+    return it('should not find another actuator in config', () => assert(!framework.deviceManager.isDeviceInConfig('a-not-present-id')));
+  });
+});

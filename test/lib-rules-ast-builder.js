@@ -1,22 +1,28 @@
-cassert = require "cassert"
-assert = require "assert"
-Promise = require 'bluebird'
-S = require 'string'
-util = require 'util'
-_ = require 'lodash'
+/*
+ * decaffeinate suggestions:
+ * DS101: Remove unnecessary use of Array.from
+ * DS102: Remove unnecessary code created because of implicit returns
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+const cassert = require("cassert");
+const assert = require("assert");
+const Promise = require('bluebird');
+const S = require('string');
+const util = require('util');
+const _ = require('lodash');
 
-env = require('../startup').env
+const { env } = require('../startup');
 
-describe "BoolExpressionTreeBuilder", ->
+describe("BoolExpressionTreeBuilder", function() {
 
-  rulesAst = require '../lib/rules-ast-builder'
+  const rulesAst = require('../lib/rules-ast-builder');
 
-  describe '#build', ->
+  return describe('#build', function() {
 
-    tests = [
+    const tests = [
       {
-        tokens: ['predicate', '(', 0, ')']
-        predicates: [{token: '0'}]
+        tokens: ['predicate', '(', 0, ')'],
+        predicates: [{token: '0'}],
         result: "predicate('0')"
       },
       {
@@ -24,8 +30,8 @@ describe "BoolExpressionTreeBuilder", ->
           'predicate', '(', 0, ')', 
           'and', 
           'predicate', '(', 1, ')'
-        ]
-        predicates: [{token: '0'}, {token: '1'}]
+        ],
+        predicates: [{token: '0'}, {token: '1'}],
         result: "and(predicate('0'), predicate('1'))"
       },
       {
@@ -33,8 +39,8 @@ describe "BoolExpressionTreeBuilder", ->
           'predicate', '(', 0, ')', 
           'or', 
           'predicate', '(', 1, ')'
-        ]
-        predicates: [{token: '0'}, {token: '1'}]
+        ],
+        predicates: [{token: '0'}, {token: '1'}],
         result: "or(predicate('0'), predicate('1'))"
       },
       {
@@ -43,8 +49,8 @@ describe "BoolExpressionTreeBuilder", ->
           'or', 
           'predicate', '(', 1, ')', 
           'and', 
-          'predicate', '(', 2, ')']
-        predicates: [{token: '0'}, {token: '1'}, {token: '2'}]
+          'predicate', '(', 2, ')'],
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}],
         result: "or(predicate('0'), and(predicate('1'), predicate('2')))"
       },
       {
@@ -53,105 +59,105 @@ describe "BoolExpressionTreeBuilder", ->
           'and', 
           'predicate', '(', 1, ')', 
           'or', 
-          'predicate', '(', 2, ')']
-        predicates: [{token: '0'}, {token: '1'}, {token: '2'}]
+          'predicate', '(', 2, ')'],
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}],
         result: "or(and(predicate('0'), predicate('1')), predicate('2'))"
       },
       {
         tokens: [
           'predicate', '(', 0, ')', 
           'and',
-          '['
+          '[',
           'predicate', '(', 1, ')', 
           'or', 
-          'predicate', '(', 2, ')'
+          'predicate', '(', 2, ')',
           ']'
-        ]
-        predicates: [{token: '0'}, {token: '1'}, {token: '2'}]
+        ],
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}],
         result: "and(predicate('0'), or(predicate('1'), predicate('2')))"
       },
       {
         tokens: [
           'predicate', '(', 0, ')', 
           'or',
-          '['
+          '[',
           'predicate', '(', 1, ')', 
           'or', 
-          'predicate', '(', 2, ')'
+          'predicate', '(', 2, ')',
           ']'
-        ]
-        predicates: [{token: '0'}, {token: '1'}, {token: '2'}]
+        ],
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}],
         result: "or(predicate('0'), or(predicate('1'), predicate('2')))"
       },
       {
         tokens: [
-          '['
+          '[',
           'predicate', '(', 0, ')', 
           'or',
           'predicate', '(', 1, ')', 
-          ']'
+          ']',
           'and', 
           'predicate', '(', 2, ')'
-        ]
-        predicates: [{token: '0'}, {token: '1'}, {token: '2'}]
+        ],
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}],
         result: "and(or(predicate('0'), predicate('1')), predicate('2'))"
-      }
-      {
-        tokens: [
-          '['
-          'predicate', '(', 0, ')', 
-          'and',
-          'predicate', '(', 1, ')', 
-          ']'
-          'or', 
-          'predicate', '(', 2, ')'
-        ]
-        predicates: [{token: '0'}, {token: '1'}, {token: '2'}]
-        result: "or(and(predicate('0'), predicate('1')), predicate('2'))"
-      }
+      },
       {
         tokens: [
           '[',
-          '['
           'predicate', '(', 0, ')', 
           'and',
           'predicate', '(', 1, ')', 
           ']',
-          ']'
           'or', 
           'predicate', '(', 2, ')'
-        ]
-        predicates: [{token: '0'}, {token: '1'}, {token: '2'}]
-        result: "or(and(predicate('0'), predicate('1')), predicate('2'))"
-      }
-      {
-        tokens: [
-          '[',
-          '['
-          'predicate', '(', 0, ')', 
-          'and',
-          'predicate', '(', 1, ')', 
-          ']'
-          'or', 
-          'predicate', '(', 2, ')',
-          ']'
-        ]
-        predicates: [{token: '0'}, {token: '1'}, {token: '2'}]
+        ],
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}],
         result: "or(and(predicate('0'), predicate('1')), predicate('2'))"
       },
       {
         tokens: [
-          '['
+          '[',
+          '[',
+          'predicate', '(', 0, ')', 
+          'and',
+          'predicate', '(', 1, ')', 
+          ']',
+          ']',
+          'or', 
+          'predicate', '(', 2, ')'
+        ],
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}],
+        result: "or(and(predicate('0'), predicate('1')), predicate('2'))"
+      },
+      {
+        tokens: [
+          '[',
+          '[',
+          'predicate', '(', 0, ')', 
+          'and',
+          'predicate', '(', 1, ')', 
+          ']',
+          'or', 
+          'predicate', '(', 2, ')',
+          ']'
+        ],
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}],
+        result: "or(and(predicate('0'), predicate('1')), predicate('2'))"
+      },
+      {
+        tokens: [
+          '[',
           'predicate', '(', 0, ')', 
           'and',
           'predicate', '(', 1, ')', 
           'or', 
-          'predicate', '(', 2, ')'
-          ']'
+          'predicate', '(', 2, ')',
+          ']',
           'or', 
           'predicate', '(', 3, ')'
-        ]
-        predicates: [{token: '0'}, {token: '1'}, {token: '2'}, {token: '3'}]
+        ],
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}, {token: '3'}],
         result: "or(or(and(predicate('0'), predicate('1')), predicate('2')), predicate('3'))"
       },
       {
@@ -161,8 +167,8 @@ describe "BoolExpressionTreeBuilder", ->
           'predicate', '(', 1, ')', 
           'or', 
           'predicate', '(', 2, ')'
-        ]
-        predicates: [{token: '0'}, {token: '1'}, {token: '2'}, {token: '3'}]
+        ],
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}, {token: '3'}],
         result: "andif(predicate('0'), or(predicate('1'), predicate('2')))"
       },
       {
@@ -172,8 +178,8 @@ describe "BoolExpressionTreeBuilder", ->
           'predicate', '(', 1, ')', 
           'or when',
           'predicate', '(', 2, ')'
-        ]
-        predicates: [{token: '0'}, {token: '1'}, {token: '2'}]
+        ],
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}],
         result: "orwhen(orwhen(predicate('0'), predicate('1')), predicate('2'))"
       },
       {
@@ -183,8 +189,8 @@ describe "BoolExpressionTreeBuilder", ->
           'predicate', '(', 1, ')', 
           'or when',
           'predicate', '(', 2, ')'
-        ]
-        predicates: [{token: '0'}, {token: '1'}, {token: '2'}]
+        ],
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}],
         result: "orwhen(or(predicate('0'), predicate('1')), predicate('2'))"
       },
       {
@@ -194,8 +200,8 @@ describe "BoolExpressionTreeBuilder", ->
           'predicate', '(', 1, ')', 
           'or when',
           'predicate', '(', 2, ')'
-        ]
-        predicates: [{token: '0'}, {token: '1'}, {token: '2'}]
+        ],
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}],
         result: "orwhen(and(predicate('0'), predicate('1')), predicate('2'))"
       },
       {
@@ -207,8 +213,8 @@ describe "BoolExpressionTreeBuilder", ->
           'predicate', '(', 2, ')',
           'or when', 
           'predicate', '(', 3, ')'
-        ]
-        predicates: [{token: '0'}, {token: '1'}, {token: '2'}, {token: '3'}]
+        ],
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}, {token: '3'}],
         result: "orwhen(andif(predicate('0'), or(predicate('1'), predicate('2'))), predicate('3'))"
       },
       {
@@ -219,33 +225,37 @@ describe "BoolExpressionTreeBuilder", ->
           'or', 
           'predicate', '(', 2, ')',
           'or when', 
-          'predicate', '(', 3, ')'
+          'predicate', '(', 3, ')',
           'or', 
           'predicate', '(', 4, ')',
-        ]
-        predicates: [{token: '0'}, {token: '1'}, {token: '2'}, {token: '3'}, {token: '4'}]
+        ],
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}, {token: '3'}, {token: '4'}],
         result: "orwhen(andif(predicate('0'), or(predicate('1'), predicate('2'))), " +
           "or(predicate('3'), predicate('4')))"
-      }
+      },
       {
         tokens: [
-          '['
+          '[',
           'predicate', '(', 0, ')', 
           'and',
           'predicate', '(', 1, ')', 
-          ']'
+          ']',
           'or when', 
           'predicate', '(', 2, ')'
-        ]
-        predicates: [{token: '0'}, {token: '1'}, {token: '2'}]
+        ],
+        predicates: [{token: '0'}, {token: '1'}, {token: '2'}],
         result: "orwhen(and(predicate('0'), predicate('1')), predicate('2'))"
       }
-    ]
+    ];
 
-    for test in tests
-      do (test) =>
-        tokensString = _.reduce(test.tokens, (l,r) -> "#{l} #{r}" )
-        it "should build from tokens #{tokensString}", ->
-          builder = new rulesAst.BoolExpressionTreeBuilder()
-          expr = builder.build(test.tokens, test.predicates)
-          assert.equal expr.toString(), test.result
+    return Array.from(tests).map((test) =>
+      (test => {
+        const tokensString = _.reduce(test.tokens, (l,r) => `${l} ${r}`);
+        return it(`should build from tokens ${tokensString}`, function() {
+          const builder = new rulesAst.BoolExpressionTreeBuilder();
+          const expr = builder.build(test.tokens, test.predicates);
+          return assert.equal(expr.toString(), test.result);
+        });
+      })(test));
+  });
+});

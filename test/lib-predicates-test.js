@@ -1,606 +1,774 @@
-cassert = require "cassert"
-assert = require "assert"
-events = require "events"
-Promise = require 'bluebird'
-_ = require 'lodash'
-t = require('decl-api').types
-M = require '../lib/matcher'
+/*
+ * decaffeinate suggestions:
+ * DS001: Remove Babel/TypeScript constructor workaround
+ * DS101: Remove unnecessary use of Array.from
+ * DS102: Remove unnecessary code created because of implicit returns
+ * DS206: Consider reworking classes to avoid initClass
+ * DS207: Consider shorter variations of null checks
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
+ */
+const cassert = require("cassert");
+const assert = require("assert");
+const events = require("events");
+const Promise = require('bluebird');
+const _ = require('lodash');
+const t = require('decl-api').types;
+const M = require('../lib/matcher');
 
-# Setup the environment
-env = require('../startup').env
+// Setup the environment
+const { env } = require('../startup');
 
-createDummyParseContext = ->
-  variables = {}
-  functions = {}
-  return M.createParseContext(variables, functions)
+const createDummyParseContext = function() {
+  const variables = {};
+  const functions = {};
+  return M.createParseContext(variables, functions);
+};
 
-describe "PresencePredicateProvider", ->
+describe("PresencePredicateProvider", function() {
 
-  frameworkDummy = 
-    deviceManager:
-      devices: {}
-      getDevices: -> _.values(@devices)
+  const frameworkDummy = { 
+    deviceManager: {
+      devices: {},
+      getDevices() { return _.values(this.devices); }
+    }
+  };
 
-  provider = null
-  sensorDummy = null
+  let provider = null;
+  let sensorDummy = null;
 
-  before ->
-    provider = new env.predicates.PresencePredicateProvider(frameworkDummy)
+  before(function() {
+    provider = new env.predicates.PresencePredicateProvider(frameworkDummy);
 
-    class PresenceDummySensor extends env.devices.PresenceSensor
-      constructor: () ->
-        @id = 'test'
-        @name = 'test device'
-        super()
+    class PresenceDummySensor extends env.devices.PresenceSensor {
+      constructor() {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.id = 'test';
+        this.name = 'test device';
+        super();
+      }
+    }
 
-    sensorDummy = new PresenceDummySensor
+    sensorDummy = new PresenceDummySensor;
 
-    frameworkDummy.deviceManager.devices =
-      test: sensorDummy
+    return frameworkDummy.deviceManager.devices =
+      {test: sensorDummy};
+  });
 
-  describe '#parsePredicate()', ->
+  describe('#parsePredicate()', function() {
 
-    testCases = [
+    let result;
+    const testCases = [
       {
         inputs: [
-          "test is present"
-          "test device is present"
-          "test signals present"
+          "test is present",
+          "test device is present",
+          "test signals present",
           "test reports present"
-        ]
-        checkOutput: (input, result) ->
-          assert result?
-          assert.equal(result.token, input)
-          assert.equal(result.nextInput, "")
-          assert result.predicateHandler?
-          assert.equal(result.predicateHandler.negated, no)
-          assert.deepEqual(result.predicateHandler.device, sensorDummy)
+        ],
+        checkOutput(input, result) {
+          assert(result != null);
+          assert.equal(result.token, input);
+          assert.equal(result.nextInput, "");
+          assert(result.predicateHandler != null);
+          assert.equal(result.predicateHandler.negated, false);
+          return assert.deepEqual(result.predicateHandler.device, sensorDummy);
+        }
       },
       {
         inputs: [
-          "test is absent"
-          "test is not present"
-          "test device is not present"
-          "test signals absent"
+          "test is absent",
+          "test is not present",
+          "test device is not present",
+          "test signals absent",
           "test reports absent"
-        ]
-        checkOutput: (input, result) ->
-          assert result?
-          assert.equal(result.token, input)
-          assert.equal(result.nextInput, "")
-          assert result.predicateHandler?
-          assert.equal(result.predicateHandler.negated, yes)
-          assert.deepEqual(result.predicateHandler.device, sensorDummy)
+        ],
+        checkOutput(input, result) {
+          assert(result != null);
+          assert.equal(result.token, input);
+          assert.equal(result.nextInput, "");
+          assert(result.predicateHandler != null);
+          assert.equal(result.predicateHandler.negated, true);
+          return assert.deepEqual(result.predicateHandler.device, sensorDummy);
+        }
       }
-    ]
+    ];
 
-    for testCase in testCases
-      do (testCase) =>
-        for input in testCase.inputs
-          do (input) =>
-            it "should parse \"#{input}\"", =>
-              context = createDummyParseContext()
-              result = provider.parsePredicate(input, context)
-              testCase.checkOutput(input, result)
+    for (let testCase of Array.from(testCases)) {
+      (testCase => {
+        return Array.from(testCase.inputs).map((input) =>
+          (input => {
+            return it(`should parse \"${input}\"`, () => {
+              const context = createDummyParseContext();
+              result = provider.parsePredicate(input, context);
+              return testCase.checkOutput(input, result);
+            });
+          })(input));
+      })(testCase);
+    }
 
-    it 'should return null if id is wrong', ->
-      result = provider.parsePredicate "foo is present"
-      assert(not info?)
+    return it('should return null if id is wrong', function() {
+      result = provider.parsePredicate("foo is present");
+      return assert((typeof info === 'undefined' || info === null));
+    });
+  });
 
-  describe "PresencePredicateHandler", ->
-    describe '#on "change"', ->  
-      predicateHandler = null
-      before ->
-        context = createDummyParseContext()
-        result = provider.parsePredicate("test is present", context)
-        assert result?
-        predicateHandler = result.predicateHandler
-        predicateHandler.setup()
+  return describe("PresencePredicateHandler", () =>
+    describe('#on "change"', function() {  
+      let predicateHandler = null;
+      before(function() {
+        const context = createDummyParseContext();
+        const result = provider.parsePredicate("test is present", context);
+        assert(result != null);
+        ({ predicateHandler } = result);
+        return predicateHandler.setup();
+      });
 
-      after ->
-        predicateHandler.destroy()
+      after(() => predicateHandler.destroy());
 
-      it "should notify when device is present", (finish) ->
-        sensorDummy._presence = no
-        predicateHandler.once 'change', changeListener = (state)->
-          assert.equal state, true
-          finish()
-        sensorDummy._setPresence yes
+      it("should notify when device is present", function(finish) {
+        let changeListener;
+        sensorDummy._presence = false;
+        predicateHandler.once('change', (changeListener = function(state){
+          assert.equal(state, true);
+          return finish();
+        })
+        );
+        return sensorDummy._setPresence(true);
+      });
 
-      it "should notify when device is absent", (finish) ->
-        sensorDummy._presence = yes
-        predicateHandler.once 'change', changeListener = (state)->
-          assert.equal state, false
-          finish()
-        sensorDummy._setPresence no
+      return it("should notify when device is absent", function(finish) {
+        let changeListener;
+        sensorDummy._presence = true;
+        predicateHandler.once('change', (changeListener = function(state){
+          assert.equal(state, false);
+          return finish();
+        })
+        );
+        return sensorDummy._setPresence(false);
+      });
+    })
+  );
+});
 
-describe "ContactPredicateProvider", ->
+describe("ContactPredicateProvider", function() {
 
-  frameworkDummy = 
-    deviceManager:
-      devices: {}
-      getDevices: -> _.values(@devices)
+  const frameworkDummy = { 
+    deviceManager: {
+      devices: {},
+      getDevices() { return _.values(this.devices); }
+    }
+  };
 
-  provider = null
-  sensorDummy = null
+  let provider = null;
+  let sensorDummy = null;
 
-  before ->
-    provider = new env.predicates.ContactPredicateProvider(frameworkDummy)
+  before(function() {
+    provider = new env.predicates.ContactPredicateProvider(frameworkDummy);
 
-    class ContactDummySensor extends env.devices.ContactSensor
-      constructor: () ->
-        @id = 'test'
-        @name = 'test device'
-        super()
+    class ContactDummySensor extends env.devices.ContactSensor {
+      constructor() {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.id = 'test';
+        this.name = 'test device';
+        super();
+      }
+    }
 
-    sensorDummy = new ContactDummySensor
+    sensorDummy = new ContactDummySensor;
 
-    frameworkDummy.deviceManager.devices =
-      test: sensorDummy
+    return frameworkDummy.deviceManager.devices =
+      {test: sensorDummy};
+  });
 
-  describe '#parsePredicate()', ->
+  describe('#parsePredicate()', function() {
 
-    testCases = [
+    let result;
+    const testCases = [
       {
         inputs: [
-          "test is closed"
-          "test device is closed"
-          "test is close"
+          "test is closed",
+          "test device is closed",
+          "test is close",
           "test device is close"
-        ]
-        checkOutput: (input, result) ->
-          assert result?
-          assert.equal(result.token, input)
-          assert.equal(result.nextInput, "")
-          assert result.predicateHandler?
-          assert.equal(result.predicateHandler.negated, no)
-          assert.deepEqual(result.predicateHandler.device, sensorDummy)
+        ],
+        checkOutput(input, result) {
+          assert(result != null);
+          assert.equal(result.token, input);
+          assert.equal(result.nextInput, "");
+          assert(result.predicateHandler != null);
+          assert.equal(result.predicateHandler.negated, false);
+          return assert.deepEqual(result.predicateHandler.device, sensorDummy);
+        }
       },
       {
         inputs: [
-          "test is opened"
-          "test device is opened"
-          "test is open"
+          "test is opened",
+          "test device is opened",
+          "test is open",
           "test device is open"
-        ]
-        checkOutput: (input, result) ->
-          assert result?
-          assert.equal(result.token, input)
-          assert.equal(result.nextInput, "")
-          assert result.predicateHandler?
-          assert.equal(result.predicateHandler.negated, yes)
-          assert.deepEqual(result.predicateHandler.device, sensorDummy)
+        ],
+        checkOutput(input, result) {
+          assert(result != null);
+          assert.equal(result.token, input);
+          assert.equal(result.nextInput, "");
+          assert(result.predicateHandler != null);
+          assert.equal(result.predicateHandler.negated, true);
+          return assert.deepEqual(result.predicateHandler.device, sensorDummy);
+        }
       }
-    ]
+    ];
 
-    for testCase in testCases
-      do (testCase) =>
-        for input in testCase.inputs
-          do (input) =>
-            it "should parse \"#{input}\"", =>
-              context = createDummyParseContext()
-              result = provider.parsePredicate(input, context)
-              testCase.checkOutput(input, result)
+    for (let testCase of Array.from(testCases)) {
+      (testCase => {
+        return Array.from(testCase.inputs).map((input) =>
+          (input => {
+            return it(`should parse \"${input}\"`, () => {
+              const context = createDummyParseContext();
+              result = provider.parsePredicate(input, context);
+              return testCase.checkOutput(input, result);
+            });
+          })(input));
+      })(testCase);
+    }
 
-    it 'should return null if id is wrong', ->
-      result = provider.parsePredicate "foo is closed"
-      assert(not info?)
+    return it('should return null if id is wrong', function() {
+      result = provider.parsePredicate("foo is closed");
+      return assert((typeof info === 'undefined' || info === null));
+    });
+  });
 
-  describe "PresencePredicateHandler", ->
-    describe '#on "change"', ->  
-      predicateHandler = null
-      before ->
-        context = createDummyParseContext()
-        result = provider.parsePredicate("test is closed", context)
-        assert result?
-        predicateHandler = result.predicateHandler
-        predicateHandler.setup()
+  return describe("PresencePredicateHandler", () =>
+    describe('#on "change"', function() {  
+      let predicateHandler = null;
+      before(function() {
+        const context = createDummyParseContext();
+        const result = provider.parsePredicate("test is closed", context);
+        assert(result != null);
+        ({ predicateHandler } = result);
+        return predicateHandler.setup();
+      });
 
-      after ->
-        predicateHandler.destroy()
+      after(() => predicateHandler.destroy());
 
-      it "should notify when device is opened", (finish) ->
-        sensorDummy._contact = no
-        predicateHandler.once 'change', changeListener = (state)->
-          assert.equal state, true
-          finish()
-        sensorDummy._setContact yes
+      it("should notify when device is opened", function(finish) {
+        let changeListener;
+        sensorDummy._contact = false;
+        predicateHandler.once('change', (changeListener = function(state){
+          assert.equal(state, true);
+          return finish();
+        })
+        );
+        return sensorDummy._setContact(true);
+      });
 
-      it "should notify when device is closed", (finish) ->
-        sensorDummy._contact = yes
-        predicateHandler.once 'change', changeListener = (state)->
-          assert.equal state, false
-          finish()
-        sensorDummy._setContact no
+      return it("should notify when device is closed", function(finish) {
+        let changeListener;
+        sensorDummy._contact = true;
+        predicateHandler.once('change', (changeListener = function(state){
+          assert.equal(state, false);
+          return finish();
+        })
+        );
+        return sensorDummy._setContact(false);
+      });
+    })
+  );
+});
 
-describe "SwitchPredicateProvider", ->
+describe("SwitchPredicateProvider", function() {
 
-  frameworkDummy = 
-    deviceManager:
-      devices: {}
-      getDevices: -> _.values(@devices)
+  const frameworkDummy = { 
+    deviceManager: {
+      devices: {},
+      getDevices() { return _.values(this.devices); }
+    }
+  };
 
-  provider = null
-  switchDummy = null
+  let provider = null;
+  let switchDummy = null;
 
-  before ->
-    provider = new env.predicates.SwitchPredicateProvider(frameworkDummy)
+  before(function() {
+    provider = new env.predicates.SwitchPredicateProvider(frameworkDummy);
 
-    class SwitchDummyDevice extends env.devices.SwitchActuator
-      constructor: () ->
-        @id = 'test'
-        @name = 'test device'
-        @_state = on
-        super()
+    class SwitchDummyDevice extends env.devices.SwitchActuator {
+      constructor() {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.id = 'test';
+        this.name = 'test device';
+        this._state = true;
+        super();
+      }
+    }
 
-    switchDummy = new SwitchDummyDevice()
+    switchDummy = new SwitchDummyDevice();
 
-    frameworkDummy.deviceManager.devices =
-      test: switchDummy
+    return frameworkDummy.deviceManager.devices =
+      {test: switchDummy};
+  });
 
 
-  describe '#parsePredicate()', ->
+  describe('#parsePredicate()', function() {
 
-    testCases = [
+    const testCases = [
       {
         inputs: [
-          "test is on"
-          "test device is on"
-          "test is turned on"
+          "test is on",
+          "test device is on",
+          "test is turned on",
           "test is switched on"
-        ]
-        checkOutput: (input, result) ->
-          assert result?
-          assert.equal(result.token, input)
-          assert.equal(result.nextInput, "")
-          assert result.predicateHandler?
-          assert.equal(result.predicateHandler.state, on)
-          assert.deepEqual(result.predicateHandler.device, switchDummy)
+        ],
+        checkOutput(input, result) {
+          assert(result != null);
+          assert.equal(result.token, input);
+          assert.equal(result.nextInput, "");
+          assert(result.predicateHandler != null);
+          assert.equal(result.predicateHandler.state, true);
+          return assert.deepEqual(result.predicateHandler.device, switchDummy);
+        }
       },
       {
         inputs: [
-          "test is off"
-          "test device is off"
-          "test is turned off"
+          "test is off",
+          "test device is off",
+          "test is turned off",
           "test is switched off"
-        ]
-        checkOutput: (input, result) ->
-          assert result?
-          assert.equal(result.token, input)
-          assert.equal(result.nextInput, "")
-          assert result.predicateHandler?
-          assert.equal(result.predicateHandler.state, off)
-          assert.deepEqual(result.predicateHandler.device, switchDummy)
+        ],
+        checkOutput(input, result) {
+          assert(result != null);
+          assert.equal(result.token, input);
+          assert.equal(result.nextInput, "");
+          assert(result.predicateHandler != null);
+          assert.equal(result.predicateHandler.state, false);
+          return assert.deepEqual(result.predicateHandler.device, switchDummy);
+        }
       }
-    ]
+    ];
 
-    for testCase in testCases
-      do (testCase) =>
-        for input in testCase.inputs
-          do (input) =>
-            it "should parse \"#{input}\"", =>
-              context = createDummyParseContext()
-              result = provider.parsePredicate input, context
-              testCase.checkOutput(input, result)
+    return Array.from(testCases).map((testCase) =>
+      (testCase => {
+        return Array.from(testCase.inputs).map((input) =>
+          (input => {
+            return it(`should parse \"${input}\"`, () => {
+              const context = createDummyParseContext();
+              const result = provider.parsePredicate(input, context);
+              return testCase.checkOutput(input, result);
+            });
+          })(input));
+      })(testCase));
+  });
 
-  describe "SwitchPredicateHandler", ->
+  return describe("SwitchPredicateHandler", () =>
 
-    describe '#on "change"', ->  
-      predicateHandler = null
-      before ->
-        context = createDummyParseContext()
-        result = provider.parsePredicate "test is on", context
-        assert result?
-        predicateHandler = result.predicateHandler
-        predicateHandler.setup()
+    describe('#on "change"', function() {  
+      let predicateHandler = null;
+      before(function() {
+        const context = createDummyParseContext();
+        const result = provider.parsePredicate("test is on", context);
+        assert(result != null);
+        ({ predicateHandler } = result);
+        return predicateHandler.setup();
+      });
 
-      after ->
-        predicateHandler.destroy()
+      after(() => predicateHandler.destroy());
 
-      it "should notify when switch is on", (finish) ->
-        switchDummy._state = off
-        predicateHandler.once 'change', changeListener = (state)->
-          assert.equal state, on
-          finish()
-        switchDummy._setState on
+      it("should notify when switch is on", function(finish) {
+        let changeListener;
+        switchDummy._state = false;
+        predicateHandler.once('change', (changeListener = function(state){
+          assert.equal(state, true);
+          return finish();
+        })
+        );
+        return switchDummy._setState(true);
+      });
 
-      it "should notify when switch is off", (finish) ->
-        switchDummy._state = on
-        predicateHandler.once 'change', changeListener = (state)->
-          assert.equal state, off
-          finish()
-        switchDummy._setState off
+      return it("should notify when switch is off", function(finish) {
+        let changeListener;
+        switchDummy._state = true;
+        predicateHandler.once('change', (changeListener = function(state){
+          assert.equal(state, false);
+          return finish();
+        })
+        );
+        return switchDummy._setState(false);
+      });
+    })
+  );
+});
 
 
-describe "DeviceAttributePredicateProvider", ->
+describe("DeviceAttributePredicateProvider", function() {
 
-  frameworkDummy = 
-    deviceManager:
-      devices: {}
-      getDevices: -> _.values(@devices)
+  const frameworkDummy = { 
+    deviceManager: {
+      devices: {},
+      getDevices() { return _.values(this.devices); }
+    }
+  };
 
-  provider = null
-  sensorDummy = null
+  let provider = null;
+  let sensorDummy = null;
 
-  before ->
-    provider = new env.predicates.DeviceAttributePredicateProvider(frameworkDummy)
+  before(function() {
+    provider = new env.predicates.DeviceAttributePredicateProvider(frameworkDummy);
 
-    class DummySensor extends env.devices.Sensor
-  
-      attributes:
-        testvalue:
-          description: "a testvalue"
-          type: t.number
-          unit: '°C'
+    class DummySensor extends env.devices.Sensor {
+      static initClass() {
+    
+        this.prototype.attributes = {
+          testvalue: {
+            description: "a testvalue",
+            type: t.number,
+            unit: '°C'
+          }
+        };
+      }
 
-      constructor: () ->
-        @id = 'test'
-        @name = 'test sensor'
-        super()
+      constructor() {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.id = 'test';
+        this.name = 'test sensor';
+        super();
+      }
+    }
+    DummySensor.initClass();
 
-    sensorDummy = new DummySensor()
+    sensorDummy = new DummySensor();
 
-    frameworkDummy.deviceManager.devices =
-      test: sensorDummy
+    return frameworkDummy.deviceManager.devices =
+      {test: sensorDummy};
+  });
 
-  describe '#parsePredicate()', ->
+  describe('#parsePredicate()', function() {
 
-    comparators = 
-      'is': '=='
-      'is equal': '=='
-      'is equal to': '=='
-      'equals': '=='
-      'is not': '!='
-      'is less': '<'
-      'less': '<'
-      'less than': '<'
-      'is less than': '<'
-      'lower as': '<'
-      'lower': '<'
-      'is lower': '<'
-      'below': '<'
-      'is below': '<'
-      'is above': '>'
-      'above': '>'
-      'greater': '>'
-      'higher': '>'
-      'greater than': '>'
-      'is greater than': '>'
-      'is greater or equal than': '>='
-      'is equal or greater than': '>='
-      'is less or equal than': '<='
+    const comparators = { 
+      'is': '==',
+      'is equal': '==',
+      'is equal to': '==',
+      'equals': '==',
+      'is not': '!=',
+      'is less': '<',
+      'less': '<',
+      'less than': '<',
+      'is less than': '<',
+      'lower as': '<',
+      'lower': '<',
+      'is lower': '<',
+      'below': '<',
+      'is below': '<',
+      'is above': '>',
+      'above': '>',
+      'greater': '>',
+      'higher': '>',
+      'greater than': '>',
+      'is greater than': '>',
+      'is greater or equal than': '>=',
+      'is equal or greater than': '>=',
+      'is less or equal than': '<=',
       'is equal or less than': '<='
+    };
 
-    for comp, sign of comparators
-      do (comp, sign) ->
-        testPredicate = "testvalue of test sensor #{comp} 42"
+    for (let comp in comparators) {
+      const sign = comparators[comp];
+      (function(comp, sign) {
+        const testPredicate = `testvalue of test sensor ${comp} 42`;
 
-        it "should parse \"#{testPredicate}\"", ->
-          context = createDummyParseContext()
-          result = provider.parsePredicate testPredicate, context
-          cassert result?
-          cassert result.predicateHandler?
-          predHandler = result.predicateHandler
-          cassert predHandler.device.id is "test"
-          cassert predHandler.comparator is sign
-          cassert predHandler.attribute is 'testvalue'
-          cassert predHandler.referenceValue is 42
-          cassert result.token is testPredicate
-          cassert result.nextInput is ""
+        return it(`should parse \"${testPredicate}\"`, function() {
+          const context = createDummyParseContext();
+          const result = provider.parsePredicate(testPredicate, context);
+          cassert(result != null);
+          cassert(result.predicateHandler != null);
+          const predHandler = result.predicateHandler;
+          cassert(predHandler.device.id === "test");
+          cassert(predHandler.comparator === sign);
+          cassert(predHandler.attribute === 'testvalue');
+          cassert(predHandler.referenceValue === 42);
+          cassert(result.token === testPredicate);
+          return cassert(result.nextInput === "");
+        });
+      })(comp, sign);
+    }
 
-    it "should parse predicate with unit: testvalue of test sensor is 42 °C", ->
-      context = createDummyParseContext()
-      result = provider.parsePredicate "testvalue of test sensor is 42 °C", context
-      cassert result?
-      cassert result.predicateHandler?
-      predHandler = result.predicateHandler
-      cassert predHandler.device.id is "test"
-      cassert predHandler.comparator is "=="
-      cassert predHandler.attribute is 'testvalue'
-      cassert predHandler.referenceValue is 42
-      cassert result.token is "testvalue of test sensor is 42 °C"
-      cassert result.nextInput is ""
+    it("should parse predicate with unit: testvalue of test sensor is 42 °C", function() {
+      const context = createDummyParseContext();
+      const result = provider.parsePredicate("testvalue of test sensor is 42 °C", context);
+      cassert(result != null);
+      cassert(result.predicateHandler != null);
+      const predHandler = result.predicateHandler;
+      cassert(predHandler.device.id === "test");
+      cassert(predHandler.comparator === "==");
+      cassert(predHandler.attribute === 'testvalue');
+      cassert(predHandler.referenceValue === 42);
+      cassert(result.token === "testvalue of test sensor is 42 °C");
+      return cassert(result.nextInput === "");
+    });
 
-    it "should parse predicate with unit: testvalue of test sensor is 42 C", ->
-      context = createDummyParseContext()
-      result = provider.parsePredicate "testvalue of test sensor is 42 C", context
-      cassert result?
-      cassert result.predicateHandler?
-      predHandler = result.predicateHandler
-      cassert predHandler.device.id is "test"
-      cassert predHandler.comparator is "=="
-      cassert predHandler.attribute is 'testvalue'
-      cassert predHandler.referenceValue is 42
-      cassert result.token is "testvalue of test sensor is 42 C"
-      cassert result.nextInput is ""
+    return it("should parse predicate with unit: testvalue of test sensor is 42 C", function() {
+      const context = createDummyParseContext();
+      const result = provider.parsePredicate("testvalue of test sensor is 42 C", context);
+      cassert(result != null);
+      cassert(result.predicateHandler != null);
+      const predHandler = result.predicateHandler;
+      cassert(predHandler.device.id === "test");
+      cassert(predHandler.comparator === "==");
+      cassert(predHandler.attribute === 'testvalue');
+      cassert(predHandler.referenceValue === 42);
+      cassert(result.token === "testvalue of test sensor is 42 C");
+      return cassert(result.nextInput === "");
+    });
+  });
 
-  describe "DeviceAttributePredicateHandler", ->
+  return describe("DeviceAttributePredicateHandler", () =>
 
-    describe '#on "change"', ->  
-      predicateHandler = null
-      before ->
-        context = createDummyParseContext()
-        result = provider.parsePredicate "testvalue of test is greater than 20", context
-        assert result?
-        predicateHandler = result.predicateHandler
-        predicateHandler.setup()
+    describe('#on "change"', function() {  
+      let predicateHandler = null;
+      before(function() {
+        const context = createDummyParseContext();
+        const result = provider.parsePredicate("testvalue of test is greater than 20", context);
+        assert(result != null);
+        ({ predicateHandler } = result);
+        return predicateHandler.setup();
+      });
 
-      after ->
-        predicateHandler.destroy()
+      after(() => predicateHandler.destroy());
 
-      it "should notify when value is greater than 20 and value is 21", (finish) ->
-        predicateHandler.once 'change', (state) ->
-          cassert state is true
-          finish()
-        sensorDummy.emit 'testvalue', 21
+      it("should notify when value is greater than 20 and value is 21", function(finish) {
+        predicateHandler.once('change', function(state) {
+          cassert(state === true);
+          return finish();
+        });
+        return sensorDummy.emit('testvalue', 21);
+      });
 
-      it "should notify when value is greater than 20 and value is 19", (finish) ->
-        predicateHandler.once 'change', (state)->
-          cassert state is false
-          finish()
-        sensorDummy.emit 'testvalue', 19
+      return it("should notify when value is greater than 20 and value is 19", function(finish) {
+        predicateHandler.once('change', function(state){
+          cassert(state === false);
+          return finish();
+        });
+        return sensorDummy.emit('testvalue', 19);
+      });
+    })
+  );
+});
 
 
-describe "VariablePredicateProvider", ->
+describe("VariablePredicateProvider", function() {
 
-  frameworkDummy = new events.EventEmitter()
+  const frameworkDummy = new events.EventEmitter();
   frameworkDummy.variableManager = new env.variables.VariableManager(frameworkDummy, [
     {
-      name: 'a'
+      name: 'a',
       value: '1'
     },
     {
-      name: 'b'
+      name: 'b',
       value: '2'
     },
     {
       name: 'c',
       value: '3'
     }
-  ])
-  frameworkDummy.variableManager.init()
+  ]);
+  frameworkDummy.variableManager.init();
 
-  provider = null
-  sensorDummy = null
+  let provider = null;
+  let sensorDummy = null;
 
-  before ->
-    provider = new env.predicates.VariablePredicateProvider(frameworkDummy)
+  before(function() {
+    provider = new env.predicates.VariablePredicateProvider(frameworkDummy);
 
-    class DummySensor extends env.devices.Sensor
-  
-      attributes:
-        testvalue:
-          description: "a testvalue"
-          type: t.number
-          unit: '°C'
-
-      constructor: () ->
-        @id = 'test'
-        @name = 'test sensor'
-        super()
-
-      getTestvalue: -> Promise.resolve(42)
-
-    sensorDummy = new DummySensor()
-    frameworkDummy.emit 'deviceAdded', sensorDummy
-
-  describe '#parsePredicate()', ->
-
-    testCases = [
-      {
-        input: "1 + 2 < 4"
-        result:
-          value: true
+    class DummySensor extends env.devices.Sensor {
+      static initClass() {
+    
+        this.prototype.attributes = {
+          testvalue: {
+            description: "a testvalue",
+            type: t.number,
+            unit: '°C'
+          }
+        };
       }
-      {
-        input: "1 + 3 <= 4"
-        result:
-          value: true
+
+      constructor() {
+        {
+          // Hack: trick Babel/TypeScript into allowing this before super.
+          if (false) { super(); }
+          let thisFn = (() => { this; }).toString();
+          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
+          eval(`${thisName} = this;`);
+        }
+        this.id = 'test';
+        this.name = 'test sensor';
+        super();
       }
+
+      getTestvalue() { return Promise.resolve(42); }
+    }
+    DummySensor.initClass();
+
+    sensorDummy = new DummySensor();
+    return frameworkDummy.emit('deviceAdded', sensorDummy);
+  });
+
+  describe('#parsePredicate()', function() {
+
+    const testCases = [
       {
-        input: "1 + 3 > 4"
-        result:
+        input: "1 + 2 < 4",
+        result: {
+          value: true
+        }
+      },
+      {
+        input: "1 + 3 <= 4",
+        result: {
+          value: true
+        }
+      },
+      {
+        input: "1 + 3 > 4",
+        result: {
           value: false
-      }
+        }
+      },
       {
-        input: "$a + 2 == 3"
-        result:
+        input: "$a + 2 == 3",
+        result: {
           value: true
-      }
+        }
+      },
       {
-        input: "$a + 2 == 1 + $b"
-        result:
+        input: "$a + 2 == 1 + $b",
+        result: {
           value: true
-      }
+        }
+      },
       {
-        input: "$a == $b - 1"
-        result:
+        input: "$a == $b - 1",
+        result: {
           value: true
-      }
+        }
+      },
       {
-        input: "$test.testvalue == 42"
-        result:
+        input: "$test.testvalue == 42",
+        result: {
           value: true
-      }
+        }
+      },
       {
-        input: "$test.testvalue == 21"
-        result:
+        input: "$test.testvalue == 21",
+        result: {
           value: false
+        }
       }
-    ]
+    ];
 
-    for tc in testCases
-      do (tc) =>
-        it "should parse \"#{tc.input}\"", (finish) =>
-          context = createDummyParseContext()
-          varsAndFuns = frameworkDummy.variableManager.getVariablesAndFunctions()
-          context.variables = varsAndFuns.variables
-          context.functions = varsAndFuns.functions
-          result = provider.parsePredicate(tc.input, context)
-          assert result?
-          result.predicateHandler.getValue().then( (val) =>
-            assert.equal val, tc.result.value
-            finish()
-          ).catch(finish)
-          return
-
-
-  describe "VariablePredicateHandler", ->
-
-    describe '#on "change"', ->  
-      predicateHandler = null
-      after -> predicateHandler.destroy()
-
-      it "should notify when $a is greater than 20", (finish) ->
-        context = createDummyParseContext()
-        varsAndFuns = frameworkDummy.variableManager.getVariablesAndFunctions()
-        context.variables = varsAndFuns.variables
-        context.functions = varsAndFuns.functions
-        result = provider.parsePredicate "$a > 20", context
-        assert result?
-        predicateHandler = result.predicateHandler
-        predicateHandler.setup()
-        predicateHandler.once 'change', (state) ->
-          cassert state is true
-          finish()
-        frameworkDummy.variableManager.setVariableToValue('a', '21')
-
-    describe '#on "change"', ->  
-      predicateHandler = null
-      after -> predicateHandler.destroy()
-
-      it "should notify when $test.testvalue is greater than 42", (finish) ->
-        context = createDummyParseContext()
-        varsAndFuns = frameworkDummy.variableManager.getVariablesAndFunctions()
-        context.variables = varsAndFuns.variables
-        context.functions = varsAndFuns.functions
-        result = provider.parsePredicate "$test.testvalue > 42", context
-        assert result?
-        predicateHandler = result.predicateHandler
-        predicateHandler.setup()
-        predicateHandler.once 'change', (state) ->
-          cassert state is true
-          finish()
-        sensorDummy.getTestvalue = => Promise.resolve(50)
-        sensorDummy.emit 'testvalue', 50
+    return Array.from(testCases).map((tc) =>
+      (tc => {
+        return it(`should parse \"${tc.input}\"`, finish => {
+          const context = createDummyParseContext();
+          const varsAndFuns = frameworkDummy.variableManager.getVariablesAndFunctions();
+          context.variables = varsAndFuns.variables;
+          context.functions = varsAndFuns.functions;
+          const result = provider.parsePredicate(tc.input, context);
+          assert(result != null);
+          result.predicateHandler.getValue().then( val => {
+            assert.equal(val, tc.result.value);
+            return finish();
+          }).catch(finish);
+        });
+      })(tc));
+  });
 
 
-    # describe '#on "change"', ->  
-    #   predicateHandler = null
-    #   after -> predicateHandler.destroy()
+  return describe("VariablePredicateHandler", function() {
 
-    #   it "should throw an error, when comparing strings", (finish) ->
-    #     context = createDummyParseContext()
-    #     varsAndFuns = frameworkDummy.variableManager.getVariablesAndFunctions()
-    #     context.variables = varsAndFuns.variables
-    #     context.functions = varsAndFuns.functions
-    #     result = provider.parsePredicate "$test.testvalue > 42", context
-    #     assert result?
-    #     predicateHandler = result.predicateHandler
-    #     predicateHandler.setup()
-    #     predicateHandler.once 'change', (state) ->
-    #       cassert state is true
-    #       finish()
-    #     sensorDummy.getTestvalue = => Promise.resolve("a")
-    #     sensorDummy.attributes.testvalue.type = "string"
-    #     sensorDummy.emit 'testvalue', "a"
+    describe('#on "change"', function() {  
+      let predicateHandler = null;
+      after(() => predicateHandler.destroy());
+
+      return it("should notify when $a is greater than 20", function(finish) {
+        const context = createDummyParseContext();
+        const varsAndFuns = frameworkDummy.variableManager.getVariablesAndFunctions();
+        context.variables = varsAndFuns.variables;
+        context.functions = varsAndFuns.functions;
+        const result = provider.parsePredicate("$a > 20", context);
+        assert(result != null);
+        ({ predicateHandler } = result);
+        predicateHandler.setup();
+        predicateHandler.once('change', function(state) {
+          cassert(state === true);
+          return finish();
+        });
+        return frameworkDummy.variableManager.setVariableToValue('a', '21');
+      });
+    });
+
+    return describe('#on "change"', function() {  
+      let predicateHandler = null;
+      after(() => predicateHandler.destroy());
+
+      return it("should notify when $test.testvalue is greater than 42", function(finish) {
+        const context = createDummyParseContext();
+        const varsAndFuns = frameworkDummy.variableManager.getVariablesAndFunctions();
+        context.variables = varsAndFuns.variables;
+        context.functions = varsAndFuns.functions;
+        const result = provider.parsePredicate("$test.testvalue > 42", context);
+        assert(result != null);
+        ({ predicateHandler } = result);
+        predicateHandler.setup();
+        predicateHandler.once('change', function(state) {
+          cassert(state === true);
+          return finish();
+        });
+        sensorDummy.getTestvalue = () => Promise.resolve(50);
+        return sensorDummy.emit('testvalue', 50);
+      });
+    });
+  });
+});
+
+
+    // describe '#on "change"', ->  
+    //   predicateHandler = null
+    //   after -> predicateHandler.destroy()
+
+    //   it "should throw an error, when comparing strings", (finish) ->
+    //     context = createDummyParseContext()
+    //     varsAndFuns = frameworkDummy.variableManager.getVariablesAndFunctions()
+    //     context.variables = varsAndFuns.variables
+    //     context.functions = varsAndFuns.functions
+    //     result = provider.parsePredicate "$test.testvalue > 42", context
+    //     assert result?
+    //     predicateHandler = result.predicateHandler
+    //     predicateHandler.setup()
+    //     predicateHandler.once 'change', (state) ->
+    //       cassert state is true
+    //       finish()
+    //     sensorDummy.getTestvalue = => Promise.resolve("a")
+    //     sensorDummy.attributes.testvalue.type = "string"
+    //     sensorDummy.emit 'testvalue', "a"
