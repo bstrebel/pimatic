@@ -41,13 +41,7 @@ describe("PresencePredicateProvider", function() {
 
     class PresenceDummySensor extends env.devices.PresenceSensor {
       constructor() {
-        {
-          // Hack: trick Babel/TypeScript into allowing this before super.
-          if (false) { super(); }
-          let thisFn = (() => { this; }).toString();
-          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
-          eval(`${thisName} = this;`);
-        }
+        super();
         this.id = 'test';
         this.name = 'test device';
         super();
@@ -173,13 +167,7 @@ describe("ContactPredicateProvider", function() {
 
     class ContactDummySensor extends env.devices.ContactSensor {
       constructor() {
-        {
-          // Hack: trick Babel/TypeScript into allowing this before super.
-          if (false) { super(); }
-          let thisFn = (() => { this; }).toString();
-          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
-          eval(`${thisName} = this;`);
-        }
+        super();
         this.id = 'test';
         this.name = 'test device';
         super();
@@ -304,13 +292,7 @@ describe("SwitchPredicateProvider", function() {
 
     class SwitchDummyDevice extends env.devices.SwitchActuator {
       constructor() {
-        {
-          // Hack: trick Babel/TypeScript into allowing this before super.
-          if (false) { super(); }
-          let thisFn = (() => { this; }).toString();
-          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
-          eval(`${thisName} = this;`);
-        }
+        super();
         this.id = 'test';
         this.name = 'test device';
         this._state = true;
@@ -443,13 +425,7 @@ describe("DeviceAttributePredicateProvider", function() {
       }
 
       constructor() {
-        {
-          // Hack: trick Babel/TypeScript into allowing this before super.
-          if (false) { super(); }
-          let thisFn = (() => { this; }).toString();
-          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
-          eval(`${thisName} = this;`);
-        }
+        super();
         this.id = 'test';
         this.name = 'test sensor';
         super();
@@ -614,13 +590,7 @@ describe("VariablePredicateProvider", function() {
       }
 
       constructor() {
-        {
-          // Hack: trick Babel/TypeScript into allowing this before super.
-          if (false) { super(); }
-          let thisFn = (() => { this; }).toString();
-          let thisName = thisFn.slice(thisFn.indexOf('{') + 1, thisFn.indexOf(';')).trim();
-          eval(`${thisName} = this;`);
-        }
+        super();
         this.id = 'test';
         this.name = 'test sensor';
         super();

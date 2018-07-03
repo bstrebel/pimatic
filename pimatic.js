@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 process.umask(0);
-require('./coffee-cache.js')
+require('coffee-register');
 var path = require('path');
 var init = require('./lib/daemon');
 var semver = require('semver');

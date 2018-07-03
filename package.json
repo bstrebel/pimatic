@@ -40,7 +40,7 @@
     "body-parser": "^1.15.2",
     "byline": "~5.0.0",
     "cassert": "git+https://github.com/sweetpi/cassert.git#master",
-    "coffee-script": "^1.11.1",
+    "coffee-register": "^1.0.0",
     "colors": "^1.1.2",
     "connect-timeout": "^1.6.2",
     "cookie-parser": "^1.4.3",
@@ -71,7 +71,6 @@
     "winston": "^2.3.0"
   },
   "bundledDependencies": [
-    "coffee-script",
     "express",
     "i18n",
     "winston",
@@ -97,11 +96,9 @@
   ],
   "devDependencies": {
     "blanket": "^1.2.2",
-    "coffee-errors": "^0.8.6",
     "grunt": "^1.0.1",
     "grunt-bump": "0.8.0",
     "grunt-cli": "^1.2.0",
-    "grunt-coffeelint": "^0.0.16",
     "grunt-mocha-test": "^0.13.2",
     "mocha": "^3.2.0",
     "sinon": "^1.17.3",
